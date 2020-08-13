@@ -48,9 +48,9 @@ namespace GerenciadorCondominios.Controllers
                 if (foto != null)
                 {
                     string diretorioPasta = Path.Combine(_webHostEnvironment.WebRootPath, "Imagens");
-                    string nomeFoto = Guid.NewGuid().ToString()  + foto.FileName;
+                    string nomeFoto = Guid.NewGuid().ToString() + foto.FileName;
 
-                    using (FileStream fileStream = new FileStream(Path.Combine(diretorioPasta, nomeFoto),FileMode.Create))
+                    using (FileStream fileStream = new FileStream(Path.Combine(diretorioPasta, nomeFoto), FileMode.Create))
                     {
                         await foto.CopyToAsync(fileStream);
                         model.Foto = "~/Imagens/" + nomeFoto;
@@ -76,7 +76,7 @@ namespace GerenciadorCondominios.Controllers
                     {
                         await _usuarioRepositorio.IncluirUsuarioEmFuncao(usuario, "Administrador");
                         await _usuarioRepositorio.LogarUsuario(usuario, false);
-                        return RedirectToAction("Index", "Usuarios");
+                        return RedirectToAction("Index", "Usuario");
                     }
                 }
 
@@ -97,7 +97,7 @@ namespace GerenciadorCondominios.Controllers
                 }
                 else
                 {
-                    foreach (IdentityError erro in usuarioCriado.Errors )
+                    foreach (IdentityError erro in usuarioCriado.Errors)
                     {
                         ModelState.AddModelError("", erro.Description);
                     }
@@ -139,7 +139,7 @@ namespace GerenciadorCondominios.Controllers
 
                     else if (usuario.PrimeiroAcesso == true)
                     {
-                        return RedirectToAction("RedefinirSenha" , usuario);
+                        return RedirectToAction("RedefinirSenha", usuario);
                     }
 
                     else
@@ -177,7 +177,7 @@ namespace GerenciadorCondominios.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult>Logout()
+        public async Task<IActionResult> Logout()
         {
             await _usuarioRepositorio.DeslogarUsuario();
             return RedirectToAction("Login");
@@ -201,7 +201,7 @@ namespace GerenciadorCondominios.Controllers
         public async Task<JsonResult> ReprovarUsuario(string usuarioId)
         {
             Usuario usuario = await _usuarioRepositorio.PegarPeloId(usuarioId);
-            usuario.Status = StatusConta.Reprovado;           
+            usuario.Status = StatusConta.Reprovado;
             await _usuarioRepositorio.AtualizarUsuario(usuario);
 
             return Json(true);
@@ -228,7 +228,7 @@ namespace GerenciadorCondominios.Controllers
             ViewBag.Nome = nome;
             Usuario usuario = await _usuarioRepositorio.PegarPeloId(usuarioId);
 
-            if(usuario == null)
+            if (usuario == null)
                 return NotFound();
 
             List<FuncaoUsuarioViewModel> viewModel = new List<FuncaoUsuarioViewModel>();
@@ -245,7 +245,7 @@ namespace GerenciadorCondominios.Controllers
                 {
                     model.isSelecionado = true;
                 }
-                else                
+                else
                     model.isSelecionado = false;
 
                 viewModel.Add(model);
@@ -253,5 +253,70 @@ namespace GerenciadorCondominios.Controllers
 
             return View(viewModel);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> GerenciarUsuario(List<FuncaoUsuarioViewModel> model)
+        {
+            string usuarioId = TempData["usuarioId"].ToString();
+
+            Usuario usuario = await _usuarioRepositorio.PegarPeloId(usuarioId);
+
+            if (usuario == null)
+                return NotFound();
+
+            IEnumerable<string> funcoes = await _usuarioRepositorio.PegarFuncoesUsuario(usuario);
+            IdentityResult resultado = await _usuarioRepositorio.RemoverFuncoesUsuario(usuario, funcoes);
+
+            if (!resultado.Succeeded)
+            {
+                ModelState.AddModelError("", "Não foi possível atualizar as funções do usuários");
+                TempData["Exclusao"] = $"Não foi possível atualizar as funções do usuário {usuario.UserName}";
+                return View("GerenciarUsuario", usuarioId);
+            }
+
+            resultado = await _usuarioRepositorio.IncluirUsuarioEmFuncoes(usuario,
+                model.Where(x => x.isSelecionado == true).Select(x => x.Nome));
+
+            if (!resultado.Succeeded)
+            {
+                ModelState.AddModelError("", "Não foi possível atualizar as funções do usuários");
+                TempData["Exclusao"] = $"Não foi possível atualizar as funções do usuário {usuario.UserName}";
+                return View("GerenciarUsuario", usuarioId);
+            }
+
+            TempData["Atualizacao"] = $"As funções do usuário {usuario.UserName} foram atualizadas";
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> MinhasInformacoes()
+        {
+            return View(await _usuarioRepositorio.PegarUsuarioPeloNome(User));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Atualizar(string id)
+        {
+            Usuario usuario = await _usuarioRepositorio.PegarPeloId(id);
+
+            if (usuario == null)
+                return NotFound();
+
+            AtualizarViewModel model = new AtualizarViewModel
+            {
+                UsuarioId = usuario.Id,
+                Nome = usuario.UserName,
+                CPF = usuario.CPF,
+                Email = usuario.Email,
+                Foto = usuario.Foto,
+                Telefone = usuario.PhoneNumber
+            };
+
+            TempData["Foto"] = usuario.Foto;
+
+            return View(model);
+        }
+
     }
+
+   
 }

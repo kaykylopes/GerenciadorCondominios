@@ -15,8 +15,8 @@ namespace GerenciadorCondominios.Extensions
                 opcoes.Cookie.Name = "IdentityCookie";
                 opcoes.Cookie.HttpOnly = true;
                 opcoes.ExpireTimeSpan = TimeSpan.FromMinutes(60);
-                opcoes.LoginPath = "/Usuarios/Login";
-                opcoes.AccessDeniedPath = "/Usuarios/AcessoNegado";
+                opcoes.LoginPath = "/Usuario/Login";
+                opcoes.AccessDeniedPath = "/Usuario/AcessoNegado";
             });
         }
     }
