@@ -316,6 +316,78 @@ namespace GerenciadorCondominios.Controllers
             return View(model);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Atualizar (AtualizarViewModel viewMode, IFormFile foto)
+        {
+            if (ModelState.IsValid)
+            {
+                if (foto != null)
+                {
+                    string diretorioPasta = Path.Combine(_webHostEnvironment.WebRootPath, "Imagens");
+                    string nomeFoto = Guid.NewGuid().ToString() + foto.FileName;
+
+                    using (FileStream fileStream = new FileStream(Path.Combine(diretorioPasta, nomeFoto), FileMode.Create))
+                    {
+                        await foto.CopyToAsync(fileStream);
+                        viewMode.Foto = "~/Imagens/" + nomeFoto;
+                    }
+                }
+                else
+                
+                    viewMode.Foto = TempData["foto"].ToString();
+
+                Usuario usuario = await _usuarioRepositorio.PegarPeloId(viewMode.UsuarioId);
+                usuario.UserName = viewMode.Nome;
+                usuario.CPF = viewMode.CPF;
+                usuario.PhoneNumber = viewMode.Telefone;
+                usuario.Foto = viewMode.Foto;
+                usuario.Email = viewMode.Email;
+
+                await _usuarioRepositorio.AtualizarUsuario(usuario);
+
+                if (await _usuarioRepositorio.VerificarSeUsuarioEstaEmFuncao(usuario, "Administrador") ||
+                    await _usuarioRepositorio.VerificarSeUsuarioEstaEmFuncao(usuario, "Sindico"))
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                else
+                    return RedirectToAction(nameof(MinhasInformacoes));
+            }
+            return View(viewMode);
+        }
+
+       
+        [HttpGet]
+        public IActionResult RedefinirSenha(Usuario usuario)
+        {
+            LoginViewModel model = new LoginViewModel
+            {
+                Email = usuario.Email
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RedefinirSenha(LoginViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                Usuario usuario = await _usuarioRepositorio.PegarUsuarioPeloEmail(model.Email);
+                model.Senha = _usuarioRepositorio.CodificaSenha(usuario, model.Senha);
+                usuario.PasswordHash = model.Senha;
+                usuario.PrimeiroAcesso = false;
+                await _usuarioRepositorio.AtualizarUsuario(usuario);
+                await _usuarioRepositorio.LogarUsuario(usuario, false);
+
+                return RedirectToAction(nameof(MinhasInformacoes));
+            }
+
+            return View(model);
+        }
+
     }
 
    
