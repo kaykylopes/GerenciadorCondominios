@@ -370,7 +370,7 @@ namespace GerenciadorCondominios.Controllers
             return View(model);
         }
 
-        [HttpPost]
+        [HttpGet]
         public async Task<IActionResult> RedefinirSenha(LoginViewModel model)
         {
             if (ModelState.IsValid)
