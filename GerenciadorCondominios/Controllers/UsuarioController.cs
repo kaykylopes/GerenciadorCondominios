@@ -346,6 +346,8 @@ namespace GerenciadorCondominios.Controllers
 
                 await _usuarioRepositorio.AtualizarUsuario(usuario);
 
+                TempData["Atualizacao"] = "Registro atualizado";
+
                 if (await _usuarioRepositorio.VerificarSeUsuarioEstaEmFuncao(usuario, "Administrador") ||
                     await _usuarioRepositorio.VerificarSeUsuarioEstaEmFuncao(usuario, "Sindico"))
                 {
@@ -358,7 +360,22 @@ namespace GerenciadorCondominios.Controllers
             return View(viewMode);
         }
 
-       
+
+        //[HttpGet]
+        //public IActionResult RedefinirSenha(Usuario usuario)
+        //{
+        //    LoginViewModel model = new LoginViewModel
+        //    {
+        //        Email = usuario.Email
+        //    };
+
+        //    return View(model);
+        //}
+
+
+
+
+
         [HttpGet]
         public IActionResult RedefinirSenha(Usuario usuario)
         {
@@ -370,7 +387,7 @@ namespace GerenciadorCondominios.Controllers
             return View(model);
         }
 
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> RedefinirSenha(LoginViewModel model)
         {
             if (ModelState.IsValid)
