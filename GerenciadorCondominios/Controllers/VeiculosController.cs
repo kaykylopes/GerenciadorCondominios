@@ -42,7 +42,7 @@ namespace GerenciadorCondominios.Controllers
                 Usuario usuario = await _usuarioRepositorio.PegarUsuarioPeloNome(User);
                 veiculo.UsuarioId = usuario.Id;
                 await _veiculoRepositorio.Inserir(veiculo);
-                return RedirectToAction("MinhasInformacoes", "Usuarios");
+                return RedirectToAction("MinhasInformacoes", "Usuario");
             }
 
             return View(veiculo);
@@ -71,7 +71,7 @@ namespace GerenciadorCondominios.Controllers
             if (ModelState.IsValid)
             {
                 await _veiculoRepositorio.Atualizar(veiculo);
-                return RedirectToAction("MinhasInformacoes", "Usuarios");
+                return RedirectToAction("MinhasInformacoes", "Usuario");
             }
 
             return View(veiculo);

@@ -335,7 +335,7 @@ namespace GerenciadorCondominios.Controllers
                 }
                 else
                 
-                    viewMode.Foto = TempData["foto"].ToString();
+                    viewMode.Foto = TempData["Foto"].ToString();
 
                 Usuario usuario = await _usuarioRepositorio.PegarPeloId(viewMode.UsuarioId);
                 usuario.UserName = viewMode.Nome;
@@ -359,21 +359,6 @@ namespace GerenciadorCondominios.Controllers
             }
             return View(viewMode);
         }
-
-
-        //[HttpGet]
-        //public IActionResult RedefinirSenha(Usuario usuario)
-        //{
-        //    LoginViewModel model = new LoginViewModel
-        //    {
-        //        Email = usuario.Email
-        //    };
-
-        //    return View(model);
-        //}
-
-
-
 
 
         [HttpGet]
