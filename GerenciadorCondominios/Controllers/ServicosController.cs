@@ -1,5 +1,6 @@
 ﻿using GerenciadorCondominios.BLL.Models;
 using GerenciadorCondominios.DAL.Interfaces;
+using GerenciadorCondominios.ViewComponents;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -10,15 +11,16 @@ namespace GerenciadorCondominios.Controllers
     {
         private readonly IServicoRepositorio _servicoRepositorio;
         private readonly IUsuarioRepositorio _usuarioRepositorio;
-       // private readonly IServicoPredioRepositorio _servicoPredioRepositorio;
-        //private readonly IHistoricoRecursosRepositorio _historicoRecursosRepositorio;
+        private readonly IServicoPredioRepositorio _servicoPredioRepositorio;
+        private readonly  IHistoricoRecursosRepositorio _historicoRecursosRepositorio;
 
-        public ServicosController(IServicoRepositorio servicoRepositorio, IUsuarioRepositorio usuarioRepositorio)
+        public ServicosController(IServicoRepositorio servicoRepositorio, IUsuarioRepositorio usuarioRepositorio,
+           IHistoricoRecursosRepositorio historicoRecursosRepositorio, IServicoPredioRepositorio servicoPredioRepositorio)
         {
             _servicoRepositorio = servicoRepositorio;
             _usuarioRepositorio = usuarioRepositorio;
-           // _servicoPredioRepositorio = servicoPredioRepositorio;
-           // _historicoRecursosRepositorio = historicoRecursosRepositorio;
+            _servicoPredioRepositorio = servicoPredioRepositorio;
+            _historicoRecursosRepositorio = historicoRecursosRepositorio;
         }
 
         // GET: Servicos
@@ -101,58 +103,58 @@ namespace GerenciadorCondominios.Controllers
         }
 
         //[Authorize(Roles = "Administrador,Sindico")]
-        //[HttpGet]
-        //public async Task<IActionResult> AprovarServico(int id)
-        //{
-        //    Servico servico = await _servicoRepositorio.PegarPeloId(id);
-        //    ServicoAprovadoViewModel viewModel = new ServicoAprovadoViewModel
-        //    {
-        //        ServicoId = servico.ServicoId,
-        //        Nome = servico.Nome
-        //    };
+        [HttpGet]
+        public async Task<IActionResult> AprovarServico(int id)
+        {
+            Servico servico = await _servicoRepositorio.PegarPeloId(id);
+            ServicoAprovadoViewModel viewModel = new ServicoAprovadoViewModel
+            {
+                ServicoId = servico.ServicoId,
+                Nome = servico.Nome
+            };
 
-        //    return View(viewModel);
-        //}
+            return View(viewModel);
+        }
 
         //[Authorize(Roles = "Administrador,Sindico")]
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> AprovarServico(ServicoAprovadoViewModel viewModel)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        Servico servico = await _servicoRepositorio.PegarPeloId(viewModel.ServicoId);
-        //        servico.Status = StatusServico.Aceito;
-        //        await _servicoRepositorio.Atualizar(servico);
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AprovarServico(ServicoAprovadoViewModel viewModel)
+        {
+            if (ModelState.IsValid)
+            {
+                Servico servico = await _servicoRepositorio.PegarPeloId(viewModel.ServicoId);
+                servico.Status = StatusServico.Aceito;
+                await _servicoRepositorio.Atualizar(servico);
 
-        //        ServicoPredio servicoPredio = new ServicoPredio
-        //        {
-        //            ServicoId = viewModel.ServicoId,
-        //            DataExecucao = viewModel.Data
-        //        };
+                ServicoPredio servicoPredio = new ServicoPredio
+                {
+                    ServicoId = viewModel.ServicoId,
+                    DataExecucao = viewModel.Data
+                };
 
-        //        await _servicoPredioRepositorio.Inserir(servicoPredio);
+                await _servicoPredioRepositorio.Inserir(servicoPredio);
 
-        //        HistoricoRecursos hr = new HistoricoRecursos
-        //        {
-        //            Valor = servico.Valor,
-        //            MesId = servicoPredio.DataExecucao.Month,
-        //            Dia = servicoPredio.DataExecucao.Day,
-        //            Ano = servicoPredio.DataExecucao.Year,
-        //            Tipo = Tipos.Saida
-        //        };
+                HistoricoRecursos hr = new HistoricoRecursos
+                {
+                    Valor = servico.Valor,
+                    MesId = servicoPredio.DataExecucao.Month,
+                    Dia = servicoPredio.DataExecucao.Day,
+                    Ano = servicoPredio.DataExecucao.Year,
+                    Tipo = Tipos.Saida
+                };
 
-        //        await _historicoRecursosRepositorio.Inserir(hr);
-        //        TempData["NovoRegistro"] = $"{servico.Nome} escalado com sucesso";
+                await _historicoRecursosRepositorio.Inserir(hr);
+                TempData["NovoRegistro"] = $"{servico.Nome} escalado com sucesso";
 
-        //        return RedirectToAction(nameof(Index));
-        //    }
+                return RedirectToAction(nameof(Index));
+            }
 
-        //    return View(viewModel);
-        //}
+            return View(viewModel);
+        }
 
 
-        [Authorize(Roles = "Administrador,Sindico")]
+      //  [Authorize(Roles = "Administrador,Sindico")]
         public async Task<IActionResult> RecusarServico(int id)
         {
             Servico servico = await _servicoRepositorio.PegarPeloId(id);
